@@ -1,11 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { saveData, loadData } from '../utils/storage';
 
+const categoryLabels = {
+  food: 'Alimentação',
+  housing: 'Moradia',
+  transport: 'Transporte',
+  health: 'Saúde',
+  education: 'Educação',
+  leisure: 'Lazer',
+  others: 'Outros',
+};
+
+const initialFormState = {
+  description: '',
+  value: '',
+  category: 'food',
+  priority: 'media',
+};
+
+const priorityLabels = {
+  alta: 'Alta',
+  media: 'Média',
+  baixa: 'Baixa',
+};
+
 const FixedExpenses = () => {
   const [expenses, setExpenses] = useState([]);
-  const [description, setDescription] = useState('');
-  const [value, setValue] = useState('');
-  const [category, setCategory] = useState('food');
+  const [form, setForm] = useState(initialFormState);
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -13,47 +34,48 @@ const FixedExpenses = () => {
     setExpenses(loadedExpenses);
   }, []);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    const { description, value, category, priority } = form;
 
     if (!description || !value) return;
 
     const newExpense = {
-      id: editingId || Date.now(),
+      id: editingId ?? Date.now(), // sempre gerar novo se não estiver editando
       description,
       value: parseFloat(value),
-      category
+      category,
+      priority,
     };
 
-    let updatedExpenses;
-    if (editingId) {
-      updatedExpenses = expenses.map(expense =>
-        expense.id === editingId ? newExpense : expense
-      );
-      setEditingId(null);
-    } else {
-      updatedExpenses = [...expenses, newExpense];
-    }
+    const updatedExpenses = editingId
+      ? expenses.map(exp => (exp.id === editingId ? newExpense : exp))
+      : [...expenses, newExpense];
 
     setExpenses(updatedExpenses);
     saveData('fixedExpenses', updatedExpenses);
-
-    setDescription('');
-    setValue('');
-    setCategory('food');
+    resetForm();
   };
 
-  const handleEdit = (expense) => {
-    setDescription(expense.description);
-    setValue(expense.value);
-    setCategory(expense.category);
-    setEditingId(expense.id);
+  const handleEdit = ({ id, description, value, category, priority }) => {
+    setForm({ description, value, category, priority });
+    setEditingId(id);
   };
 
   const handleDelete = (id) => {
-    const updatedExpenses = expenses.filter(expense => expense.id !== id);
+    const updatedExpenses = expenses.filter(exp => exp.id !== id);
     setExpenses(updatedExpenses);
     saveData('fixedExpenses', updatedExpenses);
+  };
+
+  const resetForm = () => {
+    setForm(initialFormState);
+    setEditingId(null);
   };
 
   return (
@@ -61,43 +83,48 @@ const FixedExpenses = () => {
       <h2 className="text-3xl font-semibold text-center mb-6">Gastos Fixos</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block font-medium text-gray-700">Descrição:</label>
-          <input
-            type="text"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-            className="w-full p-2 border border-gray-300 rounded-md"
-          />
-        </div>
-
-        <div>
-          <label className="block font-medium text-gray-700">Valor:</label>
-          <input
-            type="number"
-            step="0.01"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            required
-            className="w-full p-2 border border-gray-300 rounded-md"
-          />
-        </div>
+        {['description', 'value'].map((field) => (
+          <div key={field}>
+            <label className="block font-medium text-gray-700 capitalize">
+              {field === 'description' ? 'Descrição' : 'Valor'}:
+            </label>
+            <input
+              type={field === 'value' ? 'number' : 'text'}
+              step={field === 'value' ? '0.01' : undefined}
+              name={field}
+              value={form[field]}
+              onChange={handleChange}
+              required
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+          </div>
+        ))}
 
         <div>
           <label className="block font-medium text-gray-700">Categoria:</label>
           <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            name="category"
+            value={form.category}
+            onChange={handleChange}
             className="w-full p-2 border border-gray-300 rounded-md"
           >
-            <option value="food">Alimentação</option>
-            <option value="housing">Moradia</option>
-            <option value="transport">Transporte</option>
-            <option value="health">Saúde</option>
-            <option value="education">Educação</option>
-            <option value="leisure">Lazer</option>
-            <option value="others">Outros</option>
+            {Object.entries(categoryLabels).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block font-medium text-gray-700">Prioridade:</label>
+          <select
+            name="priority"
+            value={form.priority}
+            onChange={handleChange}
+            className="w-full p-2 border border-gray-300 rounded-md"
+          >
+            {Object.entries(priorityLabels).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
           </select>
         </div>
 
@@ -112,12 +139,7 @@ const FixedExpenses = () => {
           {editingId && (
             <button
               type="button"
-              onClick={() => {
-                setEditingId(null);
-                setDescription('');
-                setValue('');
-                setCategory('food');
-              }}
+              onClick={resetForm}
               className="bg-gray-300 text-black px-6 py-2 rounded-md hover:bg-gray-400 transition"
             >
               Cancelar
@@ -134,32 +156,31 @@ const FixedExpenses = () => {
             <th className="px-4 py-2 text-left border-b">Descrição</th>
             <th className="px-4 py-2 text-left border-b">Valor</th>
             <th className="px-4 py-2 text-left border-b">Categoria</th>
+            <th className="px-4 py-2 text-left border-b">Prioridade</th>
             <th className="px-4 py-2 text-left border-b">Ações</th>
           </tr>
         </thead>
         <tbody>
-          {expenses.map(expense => (
-            <tr key={expense.id} className="border-b">
-              <td className="px-4 py-2">{expense.description}</td>
-              <td className="px-4 py-2">{expense.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          {expenses.map(({ id, description, value, category, priority }) => (
+            <tr key={id} className="border-b">
+              <td className="px-4 py-2">{description}</td>
               <td className="px-4 py-2">
-                {expense.category === 'food' && 'Alimentação'}
-                {expense.category === 'housing' && 'Moradia'}
-                {expense.category === 'transport' && 'Transporte'}
-                {expense.category === 'health' && 'Saúde'}
-                {expense.category === 'education' && 'Educação'}
-                {expense.category === 'leisure' && 'Lazer'}
-                {expense.category === 'others' && 'Outros'}
+                {value.toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                })}
               </td>
+              <td className="px-4 py-2">{categoryLabels[category]}</td>
+              <td className="px-4 py-2">{priorityLabels[priority]}</td>
               <td className="px-4 py-2">
                 <button
-                  onClick={() => handleEdit(expense)}
+                  onClick={() => handleEdit({ id, description, value, category, priority })}
                   className="bg-yellow-500 text-white px-4 py-1 rounded-md hover:bg-yellow-600 transition"
                 >
                   Editar
                 </button>
                 <button
-                  onClick={() => handleDelete(expense.id)}
+                  onClick={() => handleDelete(id)}
                   className="bg-red-500 text-white px-4 py-1 rounded-md hover:bg-red-600 transition ml-2"
                 >
                   Excluir

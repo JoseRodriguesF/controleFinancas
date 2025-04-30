@@ -6,6 +6,7 @@ const FixedEarnings = () => {
   const [description, setDescription] = useState('');
   const [value, setValue] = useState('');
   const [frequency, setFrequency] = useState('monthly');
+  const [importance, setImportance] = useState('média');
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -15,14 +16,14 @@ const FixedEarnings = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (!description || !value) return;
 
     const newEarning = {
       id: editingId || Date.now(),
       description,
       value: parseFloat(value),
-      frequency
+      frequency,
+      importance
     };
 
     let updatedEarnings;
@@ -41,12 +42,14 @@ const FixedEarnings = () => {
     setDescription('');
     setValue('');
     setFrequency('monthly');
+    setImportance('média');
   };
 
   const handleEdit = (earning) => {
     setDescription(earning.description);
     setValue(earning.value);
     setFrequency(earning.frequency);
+    setImportance(earning.importance || 'média');
     setEditingId(earning.id);
   };
 
@@ -98,6 +101,8 @@ const FixedEarnings = () => {
           </select>
         </div>
 
+        
+
         <div className="flex gap-4">
           <button
             type="submit"
@@ -114,6 +119,7 @@ const FixedEarnings = () => {
                 setDescription('');
                 setValue('');
                 setFrequency('monthly');
+                setImportance('média');
               }}
               className="bg-gray-300 text-black px-6 py-2 rounded-md hover:bg-gray-400 transition"
             >
@@ -131,6 +137,7 @@ const FixedEarnings = () => {
             <th className="px-4 py-2 text-left border-b">Descrição</th>
             <th className="px-4 py-2 text-left border-b">Valor</th>
             <th className="px-4 py-2 text-left border-b">Frequência</th>
+            <th className="px-4 py-2 text-left border-b">Importância</th>
             <th className="px-4 py-2 text-left border-b">Ações</th>
           </tr>
         </thead>
@@ -145,6 +152,7 @@ const FixedEarnings = () => {
                 {earning.frequency === 'monthly' && 'Mensal'}
                 {earning.frequency === 'yearly' && 'Anual'}
               </td>
+              <td className="px-4 py-2 capitalize">{earning.importance}</td>
               <td className="px-4 py-2">
                 <button
                   onClick={() => handleEdit(earning)}

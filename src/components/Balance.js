@@ -31,7 +31,7 @@ const Balance = () => {
           </span>
         </p>
 
-        {/* Button or input section */}
+        
         <div className="flex justify-center items-center gap-4 w-full">
           {!showEdit ? (
             <button

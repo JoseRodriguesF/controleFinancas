@@ -137,7 +137,6 @@ const FixedEarnings = () => {
             <th className="px-4 py-2 text-left border-b">Descrição</th>
             <th className="px-4 py-2 text-left border-b">Valor</th>
             <th className="px-4 py-2 text-left border-b">Frequência</th>
-            <th className="px-4 py-2 text-left border-b">Importância</th>
             <th className="px-4 py-2 text-left border-b">Ações</th>
           </tr>
         </thead>

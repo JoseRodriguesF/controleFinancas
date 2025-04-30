@@ -36,4 +36,3 @@ npm start
 Abra o navegador em http://localhost:3000 para visualizar o projeto.
 Code
 
-Agora basta copiar e colar esse conteúdo no seu arquivo `README.md`!
